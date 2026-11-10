@@ -1,0 +1,86 @@
+services:
+  postgres-player:
+    image: postgres:alpine3.24
+    container_name: rpg-postgres-player
+    env_file:
+      - /player/.env
+    ports:
+      - "5433:5432"
+    networks:
+      - rpg-network
+
+  postgres-inventory:
+    image: postgres:alpine3.24
+    container_name: rpg-postgres-inventory
+    env_file:
+      - /inventory/.env
+    ports:
+      - "5434:5432"
+    networks:
+      - rpg-network
+
+  postgres-auction:
+    image: postgres:alpine3.24
+    container_name: rpg-postgres-auction
+    env_file:
+      - /auction/.env
+    ports:
+      - "5435:5432"
+    networks:
+      - rpg-network
+
+  rabbitMQ-service:
+    image: rabbitmq:4.4.0-management
+    container_name: rpg-rabbitMQ
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - rpg-network
+
+  rpg-reward-service:
+    image: rpg-reward-image:0.0.1
+    container_name: rpg-reward
+    ports:
+      - "8085:8080"
+
+    networks:
+      - rpg-network
+
+  rpg-player-service:
+    image: rpg-player-image:0.0.1
+    container_name: rpg-player
+    ports:
+      - "8084:8080"
+    depends_on:
+      - postgres-inventory
+      - postgres-player
+      - postgres-auction
+    networks:
+      - rpg-network
+
+  rpg-auction-service:
+    image: rpg-auction-image:0.0.1
+    container_name: rpg-auction
+    ports:
+      - "8085:8080"
+    depends_on:
+      - postgres-inventory
+      - postgres-auction
+    networks:
+      - rpg-network
+
+  rpg-inventory-service:
+    image: rpg-inventory-image:0.0.1
+    container_name: rpg-inventory
+    ports:
+      - "8083:8080"
+    depends_on:
+      - postgres-inventory
+      - postgres-player
+    networks:
+      - rpg-network
+
+networks:
+  rpg-network:
+    driver: bridge
